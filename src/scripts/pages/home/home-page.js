@@ -18,7 +18,9 @@ export default class HomePage {
   async render() {
     return `
       <section class="container">
-        <h1 class="section-title">Cerita Terbaru</h1>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <h1 class="section-title">Cerita Terbaru</h1>
+        </div>
 
         
 
@@ -41,6 +43,45 @@ export default class HomePage {
       model: CeritaDuniaAPI,
     });
     await this.#presenter.initialGalleryAndMap();
+
+    // Listen to online/offline events
+    window.addEventListener('online', async () => {
+      console.log('User is online - refreshing stories');
+      await this.#presenter.initialGalleryAndMap();
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('User is offline - showing cached stories');
+    });
+
+    // attach UI toggle handlers
+    const showSavedBtn = document.getElementById('show-saved-button');
+    const showLatestBtn = document.getElementById('show-latest-button');
+    if (showSavedBtn) {
+      showSavedBtn.addEventListener('click', async (ev) => {
+        ev.preventDefault();
+        try {
+          await this.#presenter.showSavedStories();
+          showSavedBtn.setAttribute('aria-pressed', 'true');
+          showLatestBtn.setAttribute('aria-pressed', 'false');
+        } catch (e) {
+          console.error('showSavedStories error', e);
+        }
+      });
+    }
+
+    if (showLatestBtn) {
+      showLatestBtn.addEventListener('click', async (ev) => {
+        ev.preventDefault();
+        try {
+          await this.#presenter.initialGalleryAndMap();
+          showSavedBtn.setAttribute('aria-pressed', 'false');
+          showLatestBtn.setAttribute('aria-pressed', 'true');
+        } catch (e) {
+          console.error('showLatest error', e);
+        }
+      });
+    }
   }
 
   // --- Helpers ---

@@ -15,6 +15,7 @@ export function generateLoaderAbsoluteTemplate() {
 export function generateMainNavigationListTemplate() {
   return `
     <li><a id="story-list-button" class="story-list-button" href="#/">Cerita Terbaru</a></li>
+    <li><a id="bookmark-button-main" class="bookmark-button" href="#/bookmark">Cerita Tersimpan</a></li>
   `;
 }
 
@@ -90,14 +91,20 @@ export function generateReportItemTemplate({ id, name, description, photoUrl, cr
             <div class="story-item__createdat">
               <i class="fas fa-calendar-alt"></i> ${showFormattedDate(createdAt, 'id-ID')}
             </div>
+            <div class="story-item__save-state" style="margin-left:8px;display:inline-block;color:#6b7280;font-size:0.9rem"></div>
           </div>
         </div>
         <div id="story-description" class="story-item__description">
           ${description}
         </div>
-        <a class="btn story-item__read-more" href="#/stories/${id}">
-          Baca Selengkapnya <i class="fas fa-arrow-right"></i>
-        </a>
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+          <a class="btn story-item__read-more" href="#/stories/${id}">
+            Baca Selengkapnya <i class="fas fa-arrow-right"></i>
+          </a>
+          <button class="btn btn-outline story-item__save" data-storyid="${id}" aria-label="Simpan cerita">
+            <i class="far fa-bookmark"></i> Simpan
+          </button>
+        </div>
       </div>
     </div>
   `;

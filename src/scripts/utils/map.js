@@ -6,6 +6,7 @@ import { MAP_SERVICE_API_KEY } from '../config';
 export default class Map {
   #zoom = 5;
   #map = null;
+  static _instances = {};
   static async getPlaceNameByCoordinate(latitude, longitude) {
     try {
       const url = new URL(`https://api.maptiler.com/geocoding/${longitude},${latitude}.json`);
@@ -41,6 +42,38 @@ export default class Map {
    * https://stackoverflow.com/questions/43431550/how-can-i-invoke-asynchronous-code-within-a-constructor
    * */
   static async build(selector, options = {}) {
+    // If an instance for this selector already exists, attempt to reuse it
+    if (Map._instances && Map._instances[selector]) {
+      const existing = Map._instances[selector];
+      const container = document.querySelector(selector);
+
+      // If container is missing or the existing map is attached to a different container,
+      // remove the existing map and recreate a fresh instance.
+      try {
+        const existingContainer = existing.#map.getContainer();
+        if (!container || existingContainer !== container) {
+          try {
+            existing.#map.remove();
+          } catch (e) {
+            // ignore remove errors
+          }
+          delete Map._instances[selector];
+        } else {
+          // If new center provided, update camera
+          if ('center' in options && options.center) {
+            existing.changeCamera(options.center, options.zoom);
+          }
+          return existing;
+        }
+      } catch (err) {
+        // If any error accessing existing map internals, clear instance and continue
+        try {
+          existing.#map.remove();
+        } catch (e) {}
+        delete Map._instances[selector];
+      }
+    }
+
     if ('center' in options && options.center) {
       return new Map(selector, options);
     }
@@ -100,6 +133,13 @@ export default class Map {
       layers: [tileMapTilerSatellite],
       ...options,
     });
+
+    // register instance to avoid duplicate initialization on same selector
+    try {
+      Map._instances[selector] = this;
+    } catch (e) {
+      // ignore registration errors
+    }
 
     // Add layer control allowing users to switch between Satellite and OpenStreetMap
     const baseLayers = {
